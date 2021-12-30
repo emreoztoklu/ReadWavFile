@@ -116,8 +116,8 @@ The "fmt " subchunk describes the sound data's format:
 /*
 *	Subchunk1Size  
 * 
-	16        4     16 for PCM.  This is the size of the
-							     rest of the Subchunk which follows this number.
+	16        4     16 for PCM.  
+	This is the size of the rest of the Subchunk which follows this number.
 */
 
  	read = fread(buffer4, sizeof(buffer4), 1, ptrin);
@@ -132,8 +132,8 @@ The "fmt " subchunk describes the sound data's format:
 	AudioFormat
 
 	20        2         PCM = 1 (i.e. Linear quantization)
-							   Values other than 1 indicate some
-							   form of compression.
+
+	Values other than 1 indicate some form of compression.
 */
 
  	read = fread(buffer2, sizeof(buffer2), 1, ptrin); 
@@ -193,9 +193,8 @@ The "fmt " subchunk describes the sound data's format:
 * BlockAlign:
 	32        2         == NumChannels * BitsPerSample/8
 
-							   The number of bytes for one sample including
-							   all channels. I wonder what happens when
-							   this number isn't an integer?
+	 The number of bytes for one sample including all channels.
+	 I wonder what happens when this number isn't an integer?
 
 */
  	read = fread(buffer2, sizeof(buffer2), 1, ptrin);
@@ -229,8 +228,10 @@ The "fmt " subchunk describes the sound data's format:
  	printf("(37-40) Data Marker: %s \n", wav->header.data_chunk_header);
 /*********************************************************************************************************************************/
 /*
-* Subchunk2Size:
+* Subchunk2Size: (data_size)
 	40        4      == NumSamples * NumChannels * BitsPerSample/8
+
+					NumSamples = Sunchunk2size * 8 /(NumChannels * BitsPerSample)
 							  
 	This is the number of bytes in the data. You can also think of this as the size
 	of the read of the subchunk following this number.
@@ -243,98 +244,107 @@ The "fmt " subchunk describes the sound data's format:
 
 /*********************************************************************************************************************************/
 // calculate no.of samples
- 	
-	long num_samples = (8 * wav->header.data_size) / (wav->header.channels * wav->header.bits_per_sample);
+	
+	//NumSamples = Sunchunk2size * 8 / (NumChannels * BitsPerSample)
+	long num_samples = (8 * wav->header.data_size) / (wav->header.channels * wav->header.bits_per_sample); 
  	printf("Number of samples:%lu \n", num_samples);
-
+	/******************************************************************************************************/
+	
+	//BlockAlign = NumChannels * BitsPerSample / 8
  	long size_of_each_sample = (wav->header.channels * wav->header.bits_per_sample) / 8; // kinda byte
  	printf("Size of each sample:%ld bytes\n", size_of_each_sample);
+	/******************************************************************************************************/
+/**********************************************************************************************************/
+// calculate duration of file
 
- 	// calculate duration of file
  	float duration_in_seconds = (float) wav->header.overall_size / wav->header.byterate;
- 	printf("Approx.Duration in seconds=%f\n", duration_in_seconds);
- 	printf("Approx.Duration in h:m:s=%s\n", seconds_to_time(duration_in_seconds));
+ 	printf("Approx.Duration in seconds=%f\n",	duration_in_seconds);
+ 	printf("Approx.Duration in h:m:s=%s\n",		seconds_to_time(duration_in_seconds));
+/***********************************************************************************************************/
+
  	getcwd(cwd,sizeof(cwd));
  	strcat(cwd,"\\");
 	strcat(cwd, outputfilename);
-	for(i=0; i<= sizeof(cwd);i++)
-	{
-		if(cwd[i]== '\\')
-		{
+
+	for(i=0; i<= sizeof(cwd);i++){
+		if(cwd[i]== '\\'){
 			cwd[i]='/';
 		}
-		
 	}
 	printf("%s\n", cwd);
- 	 // read each sample from data chunk if PCM
+/************************************************************************************************************/
+
+// read each sample from data chunk if PCM
  	if (wav->header.format_type == 1)//PCM
-	 { 
+	{ 
 		long i =0;
-		char data_buffer[size_of_each_sample];
+		size_t size = (size_t)size_of_each_sample;
+		char data_buffer[size];
 		int  size_is_correct = TRUE;
 		// make sure that the bytes-per-sample is completely divisible by num.of channels
 		long bytes_in_each_channel = (size_of_each_sample / wav->header.channels);
-		if ((bytes_in_each_channel  * wav->header.channels) != size_of_each_sample)
-		{
+
+		if ((bytes_in_each_channel  * wav->header.channels) != size_of_each_sample){
 			printf("Error: %ld x %ud <> %ldn", bytes_in_each_channel, wav->header.channels, size_of_each_sample);
 			size_is_correct = FALSE;
 		}
-		if (size_is_correct)
-		{ 
+
+		if (size_is_correct){ 
 			// the valid amplitude range for values based on the bits per sample
 			long low_limit = 0l;
 			long high_limit = 0l;
-			switch (wav->header.bits_per_sample)
-			{
-					case 8:
+			//	8-bit	samples are stored as unsigned bytes, ranging from 0 to 255.
+			//	16-bit	samples are stored as 2's-complement signed integers, ranging from -32768 to 32767.
+			//
+
+			switch (wav->header.bits_per_sample){
+				case 8:
 					low_limit = -128;
 					high_limit = 127;
 					break;
-					case 16:
+				case 16:
 					low_limit = -32768;
 					high_limit = 32767;
 					break;
-					case 32:
+				case 32:
 					low_limit = -2147483648;
 					high_limit = 2147483647;
 					break;
-				}
+			}
 								
 			printf("\n\n.Valid range for data values : %ld to %ld \n", low_limit, high_limit);
+
 			ptrout=fopen(cwd,"wb");
-			for (i =1; i <= num_samples; i++)
-			{
+
+			for (i =1; i <= num_samples; i++){
 				read = fread(data_buffer, sizeof(data_buffer), 1, ptrin);
-				if (read == 1)
-				{
+				
+				if (read == 1){
 					// dump the data read
 					unsigned int  xchannels = 0;
 					int data_in_channel = 0;
 					int offset = 0; // move the offset for every iteration in the loop below
-					for (xchannels = 0; xchannels < wav->header.channels; xchannels ++ )
-					{
+					
+					for (xchannels = 0; xchannels < wav->header.channels; xchannels ++ ){
 
 						// convert data from little endian to big endian based on bytes in each channel sample
-						if (bytes_in_each_channel == 4)
-						{
+						if (bytes_in_each_channel == 4){
 							data_in_channel = (data_buffer[offset] & 0x00ff) | 
 												((data_buffer[offset + 1] & 0x00ff) <<8) | 
 												((data_buffer[offset + 2] & 0x00ff) <<16) | 
 												(data_buffer[offset + 3]<<24);
 						}
-						else if (bytes_in_each_channel == 2)
-						{
+						else if (bytes_in_each_channel == 2){
 							data_in_channel = (data_buffer[offset] & 0x00ff) |
 												(data_buffer[offset + 1] << 8);
 						}
-						else if (bytes_in_each_channel == 1)
-						{
+						else if (bytes_in_each_channel == 1){
 							data_in_channel = data_buffer[offset] & 0x00ff;
 							data_in_channel -= 128; //in wave, 8-bit are unsigned, so shifting to signed
 						}
+
 						offset += bytes_in_each_channel;
-						if(txsize>0)
-						{
+						if(txsize>0){
 //							unsigned short int tempData=0;
 //							if((saveAs== UNSIGNED)&& (data_in_channel<0))
 //							{
@@ -347,8 +357,8 @@ The "fmt " subchunk describes the sound data's format:
 							txsize--;
 						}
 						rawsize+=1;
-						if ((rawsize % 10) == 0)
-						{
+
+						if ((rawsize % 10) == 0){
 							//printf("\n");
 							fprintf(ptrout,"\n");
 						}					
@@ -358,16 +368,12 @@ The "fmt " subchunk describes the sound data's format:
 
 			} 
 		} 
- } 
-
+	}
  printf("Closing file..\n");
  fclose(ptrin);
  fclose(ptrout);
  free(wav);
 }
-
-
-
 
 
 
