@@ -1,6 +1,9 @@
 /**
  * Read and parse a wave file
  *
+ * info: http://soundfile.sapp.org/doc/WaveFormat/
+ * 
+ * 
  **/
 #include "wav.h"
 
@@ -32,7 +35,7 @@ int wavReader( const char *inputfilename, const char *outputfilename, int txsize
  	printf("Opening  file..\n");
     
 	// open file read binary
- 	if ((ptrin = fopen(cwd, "rb"))== NULL){
+ 	if ((ptrin = fopen(cwd, "rb"))== NULL){			// read binary mode: rb   cwd: current working directory
 		printf("Error opening file\n");
 		exit(EXIT_FAILURE);
  	}
@@ -100,10 +103,22 @@ The "fmt " subchunk describes the sound data's format:
 		Subchunk1ID  
 			12        4       Contains the letters "fmt "		
 			(0x666d7420 big-endian form).
+
+	0x66 6d 74 20 
+	f	m	t	 
+
 */
 
 	read = fread(wav->header.fmt_chunk_marker, sizeof(wav->header.fmt_chunk_marker), 1, ptrin);
 	printf("(13-16) Fmt marker: %s\n", wav->header.fmt_chunk_marker);
+
+/*********************************************************************************************************************************/
+/*
+*	Subchunk1Size  
+* 
+	16        4     16 for PCM.  This is the size of the
+							     rest of the Subchunk which follows this number.
+*/
 
  	read = fread(buffer4, sizeof(buffer4), 1, ptrin);
 
@@ -111,78 +126,125 @@ The "fmt " subchunk describes the sound data's format:
  	// convert little endian to big endian 4 byte integer
 
  	wav->header.length_of_fmt = LITTLE_TO_BIG_ENDIAN(buffer4);
-/*********************************************************************************************************************************/
-	
  	printf("(17-20) Length of Fmt header: %u \n", wav->header.length_of_fmt);
- 	read = fread(buffer2, sizeof(buffer2), 1, ptrin); printf("%u %u \n", buffer2[0], buffer2[1]);
+/*********************************************************************************************************************************/
+/*
+	AudioFormat
+
+	20        2         PCM = 1 (i.e. Linear quantization)
+							   Values other than 1 indicate some
+							   form of compression.
+*/
+
+ 	read = fread(buffer2, sizeof(buffer2), 1, ptrin); 
+	printf("%u %u \n", buffer2[0], buffer2[1]);
 
  	wav->header.format_type = buffer2[0] | (buffer2[1] << 8);
 
  	char format_name[10] = "";
 
  	if (wav->header.format_type == 1)
-   		strcpy(format_name,"PCM"); 
+   		strcpy(format_name,"PCM");
+
  	else if (wav->header.format_type == 6)
   		strcpy(format_name, "A-law");
+
  	else if (wav->header.format_type == 7)
   		strcpy(format_name, "Mu-law");
 
  	printf("(21-22) Format type: %u %s \n", wav->header.format_type, format_name);
- 	read = fread(buffer2, sizeof(buffer2), 1, ptrin);
+/*********************************************************************************************************************************/
+/*
+* NumChannels:
+	
+	22        2         Mono = 1, Stereo = 2, etc.
 
+*/
+
+ 	read = fread(buffer2, sizeof(buffer2), 1, ptrin);
  	printf("%u %u \n", buffer2[0], buffer2[1]);
 
  	wav->header.channels = buffer2[0] | (buffer2[1] << 8);
  	printf("(23-24) Channels: %u \n", wav->header.channels);
 
+/*********************************************************************************************************************************/
+/*
+* SampleRate: 
+	24        4         8000, 44100, etc.
+
+*/
  	read = fread(buffer4, sizeof(buffer4), 1, ptrin);
  	printf("%u %u %u %u\n", buffer4[0], buffer4[1], buffer4[2], buffer4[3]);
 	
- 	wav->header.sample_rate = buffer4[0] |
-						(buffer4[1] << 8) |
-						(buffer4[2] << 16) |
-						(buffer4[3] << 24);
-
+ 	wav->header.sample_rate = LITTLE_TO_BIG_ENDIAN(buffer4);
  	printf("(25-28) Sample rate: %u\n", wav->header.sample_rate);
-
+/*********************************************************************************************************************************/
+/*
+* ByteRate:
+	28        4           == SampleRate * NumChannels * BitsPerSample/8
+*/
  	read = fread(buffer4, sizeof(buffer4), 1, ptrin);
  	printf("%u %u %u %u\n", buffer4[0], buffer4[1], buffer4[2], buffer4[3]);
 
- 	wav->header.byterate  = buffer4[0] |
-						(buffer4[1] << 8) |
-						(buffer4[2] << 16) |
-						(buffer4[3] << 24);
+ 	wav->header.byterate  = LITTLE_TO_BIG_ENDIAN(buffer4);
  	printf("(29-32) Byte Rate: %u , Bit Rate:%u\n", wav->header.byterate, wav->header.byterate*8);
+/*********************************************************************************************************************************/
+/*
+* BlockAlign:
+	32        2         == NumChannels * BitsPerSample/8
 
+							   The number of bytes for one sample including
+							   all channels. I wonder what happens when
+							   this number isn't an integer?
+
+*/
  	read = fread(buffer2, sizeof(buffer2), 1, ptrin);
  	printf("%u %u \n", buffer2[0], buffer2[1]);
 
-	 wav->header.block_align = buffer2[0] |
-					(buffer2[1] << 8);
+	 wav->header.block_align = buffer2[0] | (buffer2[1] << 8);
  	printf("(33-34) Block Alignment: %u \n", wav->header.block_align);
+/*********************************************************************************************************************************/
+/*
+* BitsPerSample:
+* 
+	34        2   BitsPerSample    8 bits = 8, 16 bits = 16, etc.
+			  2   ExtraParamSize   if PCM, then doesn't exist
+			  X   ExtraParams      space for extra parameters
 
+*/
  	read = fread(buffer2, sizeof(buffer2), 1, ptrin);
  	printf("%u %u \n", buffer2[0], buffer2[1]);
 
- 	wav->header.bits_per_sample = buffer2[0] |
-					(buffer2[1] << 8);
+ 	wav->header.bits_per_sample = buffer2[0] |	(buffer2[1] << 8);
  	printf("(35-36) Bits per sample: %u \n", wav->header.bits_per_sample);
+/*********************************************************************************************************************************/
+/*
+* Subchunk2ID :
 
+	36        4       Contains the letters "data"
+                      (0x64617461 big-endian form).
+
+*/
 	read = fread(wav->header.data_chunk_header, sizeof(wav->header.data_chunk_header), 1, ptrin);
  	printf("(37-40) Data Marker: %s \n", wav->header.data_chunk_header);
-
+/*********************************************************************************************************************************/
+/*
+* Subchunk2Size:
+	40        4      == NumSamples * NumChannels * BitsPerSample/8
+							  
+	This is the number of bytes in the data. You can also think of this as the size
+	of the read of the subchunk following this number.
+*/
  	read = fread(buffer4, sizeof(buffer4), 1, ptrin);
  	printf("%u %u %u %u\n", buffer4[0], buffer4[1], buffer4[2], buffer4[3]);
 
- 	wav->header.data_size = buffer4[0] |
-				(buffer4[1] << 8) |
-				(buffer4[2] << 16) | 
-				(buffer4[3] << 24 );
+ 	wav->header.data_size = LITTLE_TO_BIG_ENDIAN(buffer4);
  	printf("(41-44) Size of data chunk: %u \n\n", wav->header.data_size);
 
-
- 	// calculate no.of samples
- 	long num_samples = (8 * wav->header.data_size) / (wav->header.channels * wav->header.bits_per_sample);
+/*********************************************************************************************************************************/
+// calculate no.of samples
+ 	
+	long num_samples = (8 * wav->header.data_size) / (wav->header.channels * wav->header.bits_per_sample);
  	printf("Number of samples:%lu \n", num_samples);
 
  	long size_of_each_sample = (wav->header.channels * wav->header.bits_per_sample) / 8; // kinda byte
