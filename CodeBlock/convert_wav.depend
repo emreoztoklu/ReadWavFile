@@ -1,0 +1,25 @@
+# depslib dependency file v1.0
+1647938222 source:c:\users\arge12\desktop\wav_convert\convert_wav\user\main.c
+	<stdio.h>
+	<string.h>
+	"main.h"
+	"wav.h"
+	"typedef.h"
+
+1619764752 c:\users\arge12\desktop\wav_convert\convert_wav\user\main.h
+	<stdio.h>
+	<stdlib.h>
+	<math.h>
+	"typedef.h"
+
+1640240178 c:\users\arge12\desktop\wav_convert\convert_wav\user\typedef.h
+
+1641791566 c:\users\arge12\desktop\wav_convert\convert_wav\user\wav.h
+	<unistd.h>
+	<stdio.h>
+	<string.h>
+	<stdlib.h>
+
+1640867364 source:c:\users\arge12\desktop\wav_convert\convert_wav\user\wav.c
+	"wav.h"
+
