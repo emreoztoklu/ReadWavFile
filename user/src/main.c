@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <string.h>
-#include "main.h"
-#include "wav.h"
-#include "typedef.h"
+#include "../inc/main.h"
+#include "../inc/wav.h"
+#include "../inc/typedef.h"
 
 #define SIZE_OF_SPEED 	(600)
 #define IGNITON_BLOCK	(65535)
@@ -49,27 +49,27 @@ en kýsa geçisi almamýzýn sebebi clickleri bastýrmaktýr. */
 					arr_indexofClosestTranstion[speed][0]=curr_indexA;
 					recordedA=curr_indexA;
 				}
-			}	
+			}
 		}
 		printf("arr_indexofClosestTranstion[%d][0]=%d\n",speed,recordedA);
 		temp_SumMin=temp_Arr[((speed)*SPEED_SHIFT+PLAYBACK_SIZE-1 + IGNITON_BLOCK)-1]+temp_Arr[((speed)*SPEED_SHIFT+PLAYBACK_SIZE-1 + IGNITON_BLOCK)+1];
 		arr_indexofClosestTranstion[speed][1] = (speed)*SPEED_SHIFT+PLAYBACK_SIZE-1 + IGNITON_BLOCK;
 		for(uint32_t curr_indexB =((speed)*SPEED_SHIFT+PLAYBACK_SIZE-1 + IGNITON_BLOCK); curr_indexB> ((speed)*SPEED_SHIFT+PLAYBACK_SIZE-1 + IGNITON_BLOCK-(SCAN_SIZE+1)); curr_indexB--)
-		{			
+		{
 			if((temp_Arr[curr_indexB-1]<0)&&(temp_Arr[curr_indexB+1]>0))
 			{
 				if(temp_SumMin>((temp_Arr[curr_indexB-1]<0)+(temp_Arr[curr_indexB+1]>0)))
 				{
 					temp_SumMin=(temp_Arr[curr_indexB-1]+ temp_Arr[curr_indexB+1]);
-					arr_indexofClosestTranstion[speed][1]=curr_indexB;					
+					arr_indexofClosestTranstion[speed][1]=curr_indexB;
 					recordedB=curr_indexB;
 				}
-			}	
+			}
 		}
 		printf("arr_indexofClosestTranstion[%d][1]=%d\n",speed,recordedB);
 		//printf ("%dth speed_size=%d\n", speed,recordedB-recordedA);
 	}
-	
+
 }
 /* sýfýrý bulma
 fonksiyonu her hýz için ayrýlan 8192 size lýk arrayýn baþtan ve sondan 1000 elemanýný tarar
@@ -92,14 +92,14 @@ void zeroTransitions(const char *inputfilename, uint32_t converted_data_size)
 	fclose(stream);
 	for(int speed=0; speed<=SIZE_OF_SPEED; speed++)
 	{
-		arr_indexofzeros[speed][0] = speed*SPEED_SHIFT+IGNITON_BLOCK;//ilk elemanýn olma ihtimaline karþý		
+		arr_indexofzeros[speed][0] = speed*SPEED_SHIFT+IGNITON_BLOCK;//ilk elemanýn olma ihtimaline karþý
 		uint8_t is_first_zero_found=0;
 		for(uint32_t curr_indexA=(speed*SPEED_SHIFT+IGNITON_BLOCK);curr_indexA<((speed*SPEED_SHIFT)+IGNITON_BLOCK+SCAN_SIZE); curr_indexA++)
 		{
-			int32_t temp_Sum=0;		
+			int32_t temp_Sum=0;
 			if((temp_Arr[curr_indexA]==0)&&(is_first_zero_found==0))// sampling rate'den dolayý örnekleme sýfýra denk gelmezse ve bulamazsak napýcaz ?
 			{
-				
+
 				for(int j=SMALL_SCAN;j>0;j--)
 				{
 					temp_Sum+=temp_Arr[curr_indexA-j];
@@ -109,9 +109,9 @@ void zeroTransitions(const char *inputfilename, uint32_t converted_data_size)
 					arr_indexofzeros[speed][0]= curr_indexA; //adresi kaydettik
 					recordedA=curr_indexA;
 					is_first_zero_found=1;
-				}	
-				
-			}		
+				}
+
+			}
 		}
 		printf("arr_indexofzeros[%d][0]=%d\n",speed,recordedA);
 		arr_indexofzeros[speed][1] = (speed)*SPEED_SHIFT+PLAYBACK_SIZE-1 + IGNITON_BLOCK;//son elemanýn olma ihtimaline karþý
@@ -121,7 +121,7 @@ void zeroTransitions(const char *inputfilename, uint32_t converted_data_size)
 			int32_t temp_Sum=0;
 			if((temp_Arr[curr_indexB]==0)&&(is_first_zero_found==0)) // sampling rate'den dolayý örnekleme sýfýra denk gelmezse ve bulamazsak napýcaz ?
 			{
-				
+
 				for(int k=SMALL_SCAN;k>0;k--)
 				{
 					temp_Sum+=temp_Arr[curr_indexB-k];
@@ -132,12 +132,12 @@ void zeroTransitions(const char *inputfilename, uint32_t converted_data_size)
 					arr_indexofzeros[speed][1]= curr_indexB; //adresi kaydettik
 					recordedB=curr_indexB;
 					is_first_zero_found=1;
-				}					
+				}
 			}
 		}
 		printf("arr_indexofzeros[%d][1]=%d\n",speed,recordedB);
 	}
-	
+
 }*/
 void binaryConverter( const char *inputfilename, const char *outputfilename, int txsize)
 {
@@ -154,8 +154,8 @@ void binaryConverter( const char *inputfilename, const char *outputfilename, int
 		fwrite(&data[i], sizeof(unsigned short int),1, Fout);
 		i++;
 	}while(!feof(Fin));
- fclose(Fin);  
- fclose(Fout);	
+ fclose(Fin);
+ fclose(Fout);
 }
 #define LAST_SPEED 		(60*10)
 #define IGNITION_AREA	65535
@@ -184,7 +184,7 @@ void find_highestindex_of_soundpackages(const char *inputfilename, const char *o
 	{
 		highest_value_of_soundpackage= 0;
 		dizi[speed][0] = wavFileEndOfIgnitionPtr+(speed*620);
-		
+
 		for(y=(speed*620+IGNITION_AREA);y<((speed*620)+1000+IGNITION_AREA); y++)
 		{
 			if((highest_value_of_soundpackage < *(wavfileBeginPtr+y+1))&&(*(wavfileBeginPtr+y+1)<32768))
@@ -217,14 +217,14 @@ void find_highestindex_of_soundpackages(const char *inputfilename, const char *o
 //	  }
 //	}
 //	fprintf(Fout," }");
- 	fclose(Fin);  
- 	fclose(Fout);		
+ 	fclose(Fin);
+ 	fclose(Fout);
 }
 int main(void)
 {
 	uint32_t size=450000;//size of data to be extracted from source wav data. // in terms of uint16_t//450k adet ve 900kB lýk data data
-	wavReader("src/sample.wav", "src/sample.txt", size);
-	binaryConverter("src/sample.txt","src/sample.bin",size);
+	wavReader("../data/sample.wav", "../data/sample.txt", size);
+	binaryConverter("../data/sample.txt","../data/sample.bin",size);
 	//find_highestindex_of_soundpackages("sample.txt","sample_arr.txt",size);
 	//zeroTransitions("sample.txt",size);
 	//closestTranstion("sample.txt",size);

@@ -2,10 +2,10 @@
  * Read and parse a wave file
  *
  * info: http://soundfile.sapp.org/doc/WaveFormat/
- * 
- * 
+ *
+ *
  **/
-#include "wav.h"
+#include "../inc/wav.h"
 
 
 #define LITTLE_TO_BIG_ENDIAN(buff)   (buff[0] |(buff[1]<<8) | (buff[2]<<16) | (buff[3]<<24));
@@ -29,11 +29,11 @@ int wavReader( const char *inputfilename, const char *outputfilename, int txsize
 		if(cwd[i]== '\\'){
 			cwd[i]='/';
 		}
-		
+
 	}
 	printf("%s\n", cwd);
  	printf("Opening  file..\n");
-    
+
 	// open file read binary
  	if ((ptrin = fopen(cwd, "rb"))== NULL){			// read binary mode: rb   cwd: current working directory
 		printf("Error opening file\n");
@@ -42,7 +42,7 @@ int wavReader( const char *inputfilename, const char *outputfilename, int txsize
 
 /*********************************************************************************************************************************/
 /*
-* ChunkID 
+* ChunkID
 *
 	0         4            Contains the letters "RIFF" in ASCII form  (0x52494646 big - endian form).
 
@@ -53,21 +53,21 @@ int wavReader( const char *inputfilename, const char *outputfilename, int txsize
 	int read = 0;
 	// read header parts
  	read = fread(wav->header.riff, sizeof(wav->header.riff), SIZE_OF_RIFF, ptrin);
- 	printf("(1-4): %s \n", wav->header.riff); 
+ 	printf("(1-4): %s \n", wav->header.riff);
 
 /*********************************************************************************************************************************/
 /*
-* ChunkSize 
-* 
+* ChunkSize
+*
 	4         4          36 + SubChunk2Size, or more precisely:
 
 	4 + (8 + SubChunk1Size) + (8 + SubChunk2Size)
-	This is the size of the rest of the chunk following this number.  
+	This is the size of the rest of the chunk following this number.
 	This is the size of the entire file in bytes minus 8 bytes for the two fields not included in this count:
-							   
-	ChunkID and ChunkSize.   
 
-	0X1E B0 02 00    (big endian)	  514.851.328  ??? 
+	ChunkID and ChunkSize.
+
+	0X1E B0 02 00    (big endian)	  514.851.328  ???
 	0X00 02 B0 1E    (little endian)  176.158 byte
 
 
@@ -82,10 +82,10 @@ int wavReader( const char *inputfilename, const char *outputfilename, int txsize
 
 /*********************************************************************************************************************************/
 /*
-* Format 
-* 
+* Format
+*
 	8         4     Contains the letters "WAVE"    (0x57 41 56 45 big-endian form).
-	
+
 	0x57 41 56 45
 	  W  A  V  E
 
@@ -100,12 +100,12 @@ The "fmt " subchunk describes the sound data's format:
 /*********************************************************************************************************************************/
 /*
 *  "fmt" ChuckSýze
-		Subchunk1ID  
-			12        4       Contains the letters "fmt "		
+		Subchunk1ID
+			12        4       Contains the letters "fmt "
 			(0x666d7420 big-endian form).
 
-	0x66 6d 74 20 
-	f	m	t	 
+	0x66 6d 74 20
+	f	m	t
 
 */
 
@@ -114,15 +114,15 @@ The "fmt " subchunk describes the sound data's format:
 
 /*********************************************************************************************************************************/
 /*
-*	Subchunk1Size  
-* 
-	16        4     16 for PCM.  
+*	Subchunk1Size
+*
+	16        4     16 for PCM.
 	This is the size of the rest of the Subchunk which follows this number.
 */
 
  	read = fread(buffer4, sizeof(buffer4), 1, ptrin);
 
- 	printf("%u %u %u %u\n", buffer4[0], buffer4[1], buffer4[2], buffer4[3]);	
+ 	printf("%u %u %u %u\n", buffer4[0], buffer4[1], buffer4[2], buffer4[3]);
  	// convert little endian to big endian 4 byte integer
 
  	wav->header.length_of_fmt = LITTLE_TO_BIG_ENDIAN(buffer4);
@@ -136,7 +136,7 @@ The "fmt " subchunk describes the sound data's format:
 	Values other than 1 indicate some form of compression.
 */
 
- 	read = fread(buffer2, sizeof(buffer2), 1, ptrin); 
+ 	read = fread(buffer2, sizeof(buffer2), 1, ptrin);
 	printf("%u %u \n", buffer2[0], buffer2[1]);
 
  	wav->header.format_type = buffer2[0] | (buffer2[1] << 8);
@@ -156,7 +156,7 @@ The "fmt " subchunk describes the sound data's format:
 /*********************************************************************************************************************************/
 /*
 * NumChannels:
-	
+
 	22        2         Mono = 1, Stereo = 2, etc.
 
 */
@@ -169,13 +169,13 @@ The "fmt " subchunk describes the sound data's format:
 
 /*********************************************************************************************************************************/
 /*
-* SampleRate: 
+* SampleRate:
 	24        4         8000, 44100, etc.
 
 */
  	read = fread(buffer4, sizeof(buffer4), 1, ptrin);
  	printf("%u %u %u %u\n", buffer4[0], buffer4[1], buffer4[2], buffer4[3]);
-	
+
  	wav->header.sample_rate = LITTLE_TO_BIG_ENDIAN(buffer4);
  	printf("(25-28) Sample rate: %u\n", wav->header.sample_rate);
 /*********************************************************************************************************************************/
@@ -205,7 +205,7 @@ The "fmt " subchunk describes the sound data's format:
 /*********************************************************************************************************************************/
 /*
 * BitsPerSample:
-* 
+*
 	34        2   BitsPerSample    8 bits = 8, 16 bits = 16, etc.
 			  2   ExtraParamSize   if PCM, then doesn't exist
 			  X   ExtraParams      space for extra parameters
@@ -232,7 +232,7 @@ The "fmt " subchunk describes the sound data's format:
 	40        4      == NumSamples * NumChannels * BitsPerSample/8
 
 					NumSamples = Sunchunk2size * 8 /(NumChannels * BitsPerSample)
-							  
+
 	This is the number of bytes in the data. You can also think of this as the size
 	of the read of the subchunk following this number.
 */
@@ -244,12 +244,12 @@ The "fmt " subchunk describes the sound data's format:
 
 /*********************************************************************************************************************************/
 // calculate no.of samples
-	
+
 	//NumSamples = Sunchunk2size * 8 / (NumChannels * BitsPerSample)
-	long num_samples = (8 * wav->header.data_size) / (wav->header.channels * wav->header.bits_per_sample); 
+	long num_samples = (8 * wav->header.data_size) / (wav->header.channels * wav->header.bits_per_sample);
  	printf("Number of samples:%lu \n", num_samples);
 	/******************************************************************************************************/
-	
+
 	//BlockAlign = NumChannels * BitsPerSample / 8
  	long size_of_each_sample = (wav->header.channels * wav->header.bits_per_sample) / 8; // kinda byte
  	printf("Size of each sample:%ld bytes\n", size_of_each_sample);
@@ -276,7 +276,7 @@ The "fmt " subchunk describes the sound data's format:
 
 // read each sample from data chunk if PCM
  	if (wav->header.format_type == 1)//PCM
-	{ 
+	{
 		long i =0;
 		size_t size = (size_t)size_of_each_sample;
 		char data_buffer[size];
@@ -289,7 +289,7 @@ The "fmt " subchunk describes the sound data's format:
 			size_is_correct = FALSE;
 		}
 
-		if (size_is_correct){ 
+		if (size_is_correct){
 			// the valid amplitude range for values based on the bits per sample
 			long low_limit = 0l;
 			long high_limit = 0l;
@@ -311,27 +311,27 @@ The "fmt " subchunk describes the sound data's format:
 					high_limit = 2147483647;
 					break;
 			}
-								
+
 			printf("\n\n.Valid range for data values : %ld to %ld \n", low_limit, high_limit);
 
 			ptrout=fopen(cwd,"wb");
 
 			for (i =1; i <= num_samples; i++){
 				read = fread(data_buffer, sizeof(data_buffer), 1, ptrin);
-				
+
 				if (read == 1){
 					// dump the data read
 					unsigned int  xchannels = 0;
 					int data_in_channel = 0;
 					int offset = 0; // move the offset for every iteration in the loop below
-					
+
 					for (xchannels = 0; xchannels < wav->header.channels; xchannels ++ ){
 
 						// convert data from little endian to big endian based on bytes in each channel sample
 						if (bytes_in_each_channel == 4){
-							data_in_channel = (data_buffer[offset] & 0x00ff) | 
-												((data_buffer[offset + 1] & 0x00ff) <<8) | 
-												((data_buffer[offset + 2] & 0x00ff) <<16) | 
+							data_in_channel = (data_buffer[offset] & 0x00ff) |
+												((data_buffer[offset + 1] & 0x00ff) <<8) |
+												((data_buffer[offset + 2] & 0x00ff) <<16) |
 												(data_buffer[offset + 3]<<24);
 						}
 						else if (bytes_in_each_channel == 2){
@@ -348,7 +348,7 @@ The "fmt " subchunk describes the sound data's format:
 //							unsigned short int tempData=0;
 //							if((saveAs== UNSIGNED)&& (data_in_channel<0))
 //							{
-//								tempData= data_in_channel;						
+//								tempData= data_in_channel;
 //								fprintf(ptrout,"%9hu ",tempData);
 //							}
 //							else
@@ -361,13 +361,13 @@ The "fmt " subchunk describes the sound data's format:
 						if ((rawsize % 10) == 0){
 							//printf("\n");
 							fprintf(ptrout,"\n");
-						}					
+						}
 					}
 
 				}
 
-			} 
-		} 
+			}
+		}
 	}
  printf("Closing file..\n");
  fclose(ptrin);
@@ -403,9 +403,9 @@ The "fmt " subchunk describes the sound data's format:
   	char decimalpart[15];
   	memset(decimalpart, ' ', sizeof(decimalpart));
   	strncpy(decimalpart, &hms[ipos+1], 3);
-  	milliseconds = atoi(decimalpart);	
+  	milliseconds = atoi(decimalpart);
 
-  
+
   	sprintf(hms, "%d:%d:%d.%d", hours, minutes, seconds, milliseconds);
   	return hms;
 }

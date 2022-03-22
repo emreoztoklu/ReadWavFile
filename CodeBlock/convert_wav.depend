@@ -23,3 +23,27 @@
 1640867364 source:c:\users\arge12\desktop\wav_convert\convert_wav\user\wav.c
 	"wav.h"
 
+1647940337 source:f:\emre_dökümanlar\github_dosyalarým\readwavfile\user\src\main.c
+	<stdio.h>
+	<string.h>
+	"../inc/main.h"
+	"../inc/wav.h"
+	"../inc/typedef.h"
+
+1647939357 f:\emre_dökümanlar\github_dosyalarým\readwavfile\user\inc\main.h
+	<stdio.h>
+	<stdlib.h>
+	<math.h>
+	"typedef.h"
+
+1647939357 f:\emre_dökümanlar\github_dosyalarým\readwavfile\user\inc\typedef.h
+
+1647939357 f:\emre_dökümanlar\github_dosyalarým\readwavfile\user\inc\wav.h
+	<unistd.h>
+	<stdio.h>
+	<string.h>
+	<stdlib.h>
+
+1647940345 source:f:\emre_dökümanlar\github_dosyalarým\readwavfile\user\src\wav.c
+	"../inc/wav.h"
+
