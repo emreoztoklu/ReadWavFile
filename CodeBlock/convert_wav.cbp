@@ -31,7 +31,13 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
-		<Unit filename="main.c">
+		<Unit filename="../user/inc/main.h" />
+		<Unit filename="../user/inc/typedef.h" />
+		<Unit filename="../user/inc/wav.h" />
+		<Unit filename="../user/src/main.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../user/src/wav.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Extensions>

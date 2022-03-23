@@ -223,8 +223,8 @@ void find_highestindex_of_soundpackages(const char *inputfilename, const char *o
 int main(void)
 {
 	uint32_t size=450000;//size of data to be extracted from source wav data. // in terms of uint16_t//450k adet ve 900kB lýk data data
-	wavReader("../data/sample.wav", "../data/sample.txt", size);
-	binaryConverter("../data/sample.txt","../data/sample.bin",size);
+	wavReader("../data/sound.wav", "../data/sound.txt", size);
+	binaryConverter("../data/sound.txt","../data/sound.bin",size);
 	//find_highestindex_of_soundpackages("sample.txt","sample_arr.txt",size);
 	//zeroTransitions("sample.txt",size);
 	//closestTranstion("sample.txt",size);

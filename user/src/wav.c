@@ -326,17 +326,12 @@ The "fmt " subchunk describes the sound data's format:
 					int offset = 0; // move the offset for every iteration in the loop below
 
 					for (xchannels = 0; xchannels < wav->header.channels; xchannels ++ ){
-
 						// convert data from little endian to big endian based on bytes in each channel sample
 						if (bytes_in_each_channel == 4){
-							data_in_channel = (data_buffer[offset] & 0x00ff) |
-												((data_buffer[offset + 1] & 0x00ff) <<8) |
-												((data_buffer[offset + 2] & 0x00ff) <<16) |
-												(data_buffer[offset + 3]<<24);
+							data_in_channel = (data_buffer[offset] & 0x00ff) |((data_buffer[offset + 1] & 0x00ff) <<8) |((data_buffer[offset + 2] & 0x00ff) <<16) |(data_buffer[offset + 3]<<24);
 						}
 						else if (bytes_in_each_channel == 2){
-							data_in_channel = (data_buffer[offset] & 0x00ff) |
-												(data_buffer[offset + 1] << 8);
+							data_in_channel = (data_buffer[offset] & 0x00ff) | (data_buffer[offset + 1] << 8);
 						}
 						else if (bytes_in_each_channel == 1){
 							data_in_channel = data_buffer[offset] & 0x00ff;
